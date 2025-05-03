@@ -1,0 +1,59 @@
+# tasks/main.yml
+---
+- name: ensure required vars are defined
+  ansible.builtin.assert:
+    that:
+      - bind9_container_name is defined
+      - bind9_image is defined
+      - bind9_network is defined
+      - bind9_user is defined
+      - bind9_timezone is defined
+      - bind9_keys is defined
+      - bind9_controls is defined
+      - bind9_acls is defined
+      - bind9_options_forwarders is defined
+      - bind9_options_allow_query is defined
+      - bind9_forward_zones is defined
+    fail_msg: "One or more required variables were not defined."
+    success_msg: "All required service variables are defined."
+    quiet: no
+
+- name: create dirs
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ bind9_all_app_dirs }}"
+
+- name: render templates (compose.yml)
+  ansible.builtin.template:
+    src: compose.yml.j2
+    dest: "{{ app_dir }}/compose.yml"
+  notify: Restart bind9 container
+
+- name: render templates (zone files)
+  ansible.builtin.template:
+    src: zone.j2
+    dest: "{{ app_config_dir }}/{{ item.name }}.zone"
+  loop: "{{ bind9_forward_zones }}"
+  notify: Restart bind9 container
+
+- name: render named.conf
+  ansible.builtin.template:
+    src: named.conf.j2
+    dest: "{{ app_config_dir }}/named.conf"
+  notify: Restart bind9 container
+
+- name: create docker networks
+  docker_network:
+    name:  "{{ bind9_network }}"
+    state: present
+
+- name: deploy docker-compose
+  community.docker.docker_compose_v2:
+    project_src: "{{ app_dir }}"
+    state: present
+
+- name: flush handlers
+  meta: flush_handlers
+...

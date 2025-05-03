@@ -1,0 +1,28 @@
+# bind9/compose.yml
+---
+services:
+  {{ app_name }}:
+    image: {{ bind9_image }}
+    container_name: {{ bind9_container_name }}
+    restart: always # (always|unless-stopped)
+    networks: [{{ bind9_network }}]
+    logging:
+      driver: json-file
+      options:
+        max-file: 10
+        max-size: 2m
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+    volumes:
+      - {{ app_config_dir }}:{{ container_config_dir }}
+      - {{ app_data_dir }}:{{ container_data_dir }}
+      - {{ app_resources_dir }}:{{ container_resources_dir }}
+    environment:
+      - BIND9_USER={{ bind9_user }}
+      - TZ={{ bind9_timezone }}
+
+networks:
+  {{ bind9_network }}:
+    external: true
+...

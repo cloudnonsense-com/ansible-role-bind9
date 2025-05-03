@@ -1,0 +1,38 @@
+// Managed by Ansible
+
+{% for key in bind9_keys %}
+key "{{ key.name }}" {
+    algorithm {{ key.algorithm }};
+    secret "{{ key.secret }}";
+};
+{% endfor %}
+
+controls {
+{% for item in bind9_controls %}
+    inet {{ item['inet'] }}
+    port {{ item['port'] }}
+    allow { {% for addr in item['allow'] %}{{ addr }}; {% endfor %}}
+    keys  { {% for key in item['keys'] %}"{{ key }}"; {% endfor %}};
+
+{% endfor %}};
+
+{% for item in bind9_acls %}
+acl {{ item['name'] }} { {% for entry in item['entries'] %}{{ entry }}; {% endfor %}};
+{% endfor %}
+
+options {
+    recursion {{ bind9_options_recursion }};
+    forward {{ bind9_options_forward }};
+    forwarders  { {% for item in bind9_options_forwarders %}{{ item }}; {% endfor %}};
+    allow-query { {% for item in bind9_options_allow_query %}{{ item }}; {% endfor %}};
+    dnssec-validation {{ bind9_options_dnssec_validation }};
+    auth-nxdomain {{ bind9_options_auth_nxdomain }};
+};
+
+{% for zone in bind9_forward_zones %}
+zone "{{ zone.name }}" IN {
+    type {{ zone.type }};
+    file "{{ container_config_dir }}/{{ zone.name }}.zone";
+    update-policy { {% for item in zone['update_policy'] %}{{ item }} {% endfor %}};
+};
+{% endfor %}

@@ -1,0 +1,20 @@
+$TTL 2d
+
+$ORIGIN {{ item.name }}.
+
+@               IN     SOA    ns.{{ item.name }}. info.{{ item.name }} (
+                              2025220000     ; serial
+                              12h            ; refresh
+                              15m            ; retry
+                              3w             ; expire
+                              2h )           ; minimum TTL
+
+                IN     NS     ns.{{ item.name }}.
+
+ns              IN     A      {{ item.ns_record_ip }}
+
+; Name          Type   Class  Address
+{% for rec in item.a_records %}
+{{- "{:<15} IN     A      {}".format(rec.name, rec.ip) }}
+{% endfor %}
+

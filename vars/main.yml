@@ -1,0 +1,22 @@
+# use for hard values (not user-configurable)
+---
+# VARS on the docker host
+compose_dir: /opt/compose
+app_name: bind9
+
+app_dir:           "{{ compose_dir }}/{{ app_name }}"
+app_config_dir:    "{{ compose_dir }}/{{ app_name }}/config"
+app_data_dir:      "{{ compose_dir }}/{{ app_name }}/data" # bind9 cache data dir
+app_resources_dir: "{{ compose_dir }}/{{ app_name }}/resources"
+
+bind9_all_app_dirs:
+  - "{{ app_dir }}"
+  - "{{ app_config_dir }}"
+  - "{{ app_data_dir }}"
+  - "{{ app_resources_dir }}"
+
+# VARS on the container filesystem
+container_config_dir:    "/etc/bind"
+container_data_dir:      "/var/cache/bind"
+container_resources_dir: "/var/lib/bind"
+...
